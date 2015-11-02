@@ -10,13 +10,13 @@ package kext
 import "C"
 import "fmt"
 
-type KextInfo struct {
+type Info struct {
 	Version string
 	Started bool
 }
 
-func KextInfoForLabel(label string) (*KextInfo, error) {
-	info, err := KextInfoRaw(label)
+func LoadInfo(kextID string) (*Info, error) {
+	info, err := LoadInfoRaw(kextID)
 	if err != nil {
 		return nil, err
 	}
@@ -24,32 +24,33 @@ func KextInfoForLabel(label string) (*KextInfo, error) {
 		return nil, nil
 	}
 
-	return &KextInfo{
+	return &Info{
 		Version: info["CFBundleVersion"].(string),
 		Started: info["OSBundleStarted"].(bool),
 	}, nil
 }
 
-func KextInfoRaw(label string) (map[interface{}]interface{}, error) {
-	cfLabel, err := StringToCFString(label)
-	if cfLabel != nil {
-		defer Release(C.CFTypeRef(cfLabel))
+func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
+	cfKextID, err := StringToCFString(kextID)
+	if cfKextID != nil {
+		defer Release(C.CFTypeRef(cfKextID))
 	}
 	if err != nil {
 		return nil, err
 	}
-	cfLabels := ArrayToCFArray([]C.CFTypeRef{C.CFTypeRef(cfLabel)})
-	if cfLabels != nil {
-		defer Release(C.CFTypeRef(cfLabels))
+	cfKextIDs := ArrayToCFArray([]C.CFTypeRef{C.CFTypeRef(cfKextID)})
+	if cfKextIDs != nil {
+		defer Release(C.CFTypeRef(cfKextIDs))
 	}
-	cfDict := C.KextManagerCopyLoadedKextInfo(cfLabels, nil)
+
+	cfDict := C.KextManagerCopyLoadedKextInfo(cfKextIDs, nil)
 
 	m, err := ConvertCFDictionary(cfDict)
 	if err != nil {
 		return nil, err
 	}
 
-	info, hasKey := m[label]
+	info, hasKey := m[kextID]
 	if !hasKey {
 		return nil, nil
 	}
@@ -60,4 +61,57 @@ func KextInfoRaw(label string) (map[interface{}]interface{}, error) {
 	}
 
 	return ret, nil
+}
+
+func Load(kextID string, paths []string) error {
+	cfKextID, err := StringToCFString(kextID)
+	if cfKextID != nil {
+		defer Release(C.CFTypeRef(cfKextID))
+	}
+	if err != nil {
+		return err
+	}
+
+	var urls []C.CFTypeRef
+	for _, p := range paths {
+		cfPath, err := StringToCFString(p)
+		if cfPath != nil {
+			defer Release(C.CFTypeRef(cfPath))
+		}
+		if err != nil {
+			return err
+		}
+		cfURL := C.CFURLCreateWithFileSystemPath(nil, cfPath, 0, 1)
+		if cfURL != nil {
+			defer Release(C.CFTypeRef(cfURL))
+		}
+
+		urls = append(urls, C.CFTypeRef(cfURL))
+	}
+
+	cfURLs := ArrayToCFArray(urls)
+	if cfURLs != nil {
+		defer Release(C.CFTypeRef(cfURLs))
+	}
+
+	ret := C.KextManagerLoadKextWithIdentifier(cfKextID, cfURLs)
+	if ret != 0 {
+		return fmt.Errorf("Error loading kext(%d)", ret)
+	}
+	return nil
+}
+
+func Unload(kextID string) error {
+	cfKextID, err := StringToCFString(kextID)
+	if cfKextID != nil {
+		defer Release(C.CFTypeRef(cfKextID))
+	}
+	if err != nil {
+		return err
+	}
+	ret := C.KextManagerUnloadKextWithIdentifier(cfKextID)
+	if ret != 0 {
+		return fmt.Errorf("Error unloading kext (%d)", ret)
+	}
+	return nil
 }
