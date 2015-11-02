@@ -8,8 +8,29 @@ package kext
 #include <IOKit/kext/KextManager.h>
 */
 import "C"
+import "fmt"
 
-func KextInfo(label string) (map[interface{}]interface{}, error) {
+type KextInfo struct {
+	Version string
+	Started bool
+}
+
+func KextInfoForLabel(label string) (*KextInfo, error) {
+	info, err := KextInfoRaw(label)
+	if err != nil {
+		return nil, err
+	}
+	if info == nil {
+		return nil, nil
+	}
+
+	return &KextInfo{
+		Version: info["CFBundleVersion"].(string),
+		Started: info["OSBundleStarted"].(bool),
+	}, nil
+}
+
+func KextInfoRaw(label string) (map[interface{}]interface{}, error) {
 	cfLabel, err := StringToCFString(label)
 	if cfLabel != nil {
 		defer Release(C.CFTypeRef(cfLabel))
@@ -28,5 +49,15 @@ func KextInfo(label string) (map[interface{}]interface{}, error) {
 		return nil, err
 	}
 
-	return m, nil
+	info, hasKey := m[label]
+	if !hasKey {
+		return nil, nil
+	}
+
+	var ret, cast = info.(map[interface{}]interface{})
+	if !cast {
+		return nil, fmt.Errorf("Unexpected value for kext info")
+	}
+
+	return ret, nil
 }

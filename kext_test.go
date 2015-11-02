@@ -2,15 +2,30 @@
 
 package kext
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 func TestKextInfo(t *testing.T) {
-	info, err := KextInfo("com.github.osxfuse.filesystems.osxfusefs")
+	info, err := KextInfoRaw("com.github.osxfuse.filesystems.osxfusefs")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("%v\n", info)
+	t.Log("%v", info)
+}
+
+func TestKextInfoForLabel(t *testing.T) {
+	info, err := KextInfoForLabel("com.github.osxfuse.filesystems.osxfusefs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("%v", info)
+}
+
+func TestKextInfoNotFound(t *testing.T) {
+	info, err := KextInfoForLabel("not.a.kext")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info != nil {
+		t.Fatalf("Should have returned nil")
+	}
 }
