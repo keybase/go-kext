@@ -2,22 +2,28 @@
 
 package kext
 
-import "testing"
+import (
+	"testing"
+	"fmt"
+)
 
 func TestInfoRaw(t *testing.T) {
-	info, err := LoadInfoRaw("com.github.osxfuse.filesystems.osxfusefs")
-	if err != nil {
-		t.Fatal(err)
+	for i := 0; i < 10000; i ++ {
+		fmt.Printf("%d....\n", i)
+		info, err := LoadInfoRaw("com.github.kbfuse.filesystems.kbfuse")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("%v", info)
 	}
-	t.Log("%v", info)
 }
 
 func TestInfo(t *testing.T) {
-	info, err := LoadInfo("com.github.osxfuse.filesystems.osxfusefs")
+	info, err := LoadInfo("com.github.kbfuse.filesystems.kbfuse")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("%v", info)
+	t.Logf("%v", info)
 }
 
 func TestInfoNotFound(t *testing.T) {
