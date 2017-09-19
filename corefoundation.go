@@ -224,30 +224,30 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 		switch v := i.(type) {
 		default:
 			return nil, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
-		case C.CFTypeRef:
-			valueRef = CFTypeRefSafe(v)
+		case CFTypeRefSafe:
+			valueRef = v
 		case bool:
-			if i == true {
+			if v {
 				valueRef = CFTypeRefSafe(C.kCFBooleanTrueSafe())
 			} else {
 				valueRef = CFTypeRefSafe(C.kCFBooleanFalseSafe())
 			}
 		case []byte:
-			bytesRef, err := BytesToCFData(i.([]byte))
+			bytesRef, err := BytesToCFData(v)
 			if err != nil {
 				return nil, err
 			}
 			valueRef = CFTypeRefSafe(unsafe.Pointer(bytesRef))
 			defer ReleaseSafe(valueRef)
 		case string:
-			stringRef, err := StringToCFString(i.(string))
+			stringRef, err := StringToCFString(v)
 			if err != nil {
 				return nil, err
 			}
 			valueRef = CFTypeRefSafe(unsafe.Pointer(stringRef))
 			defer ReleaseSafe(valueRef)
 		case Convertable:
-			convertedRef, err := (i.(Convertable)).Convert()
+			convertedRef, err := (v).Convert()
 			if err != nil {
 				return nil, err
 			}
