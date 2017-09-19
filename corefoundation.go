@@ -29,6 +29,7 @@ import (
 )
 
 type CFTypeRefSafe uintptr
+type CFStringRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
 	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
@@ -96,12 +97,12 @@ func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[CFTypeRefSafe]CFTypeRefS
 
 // StringToCFString will return a CFStringRef and if non-nil, must be released with
 // Release(ref).
-func StringToCFString(s string) (C.CFStringRef, error) {
+func StringToCFString(s string) (CFStringRefSafe, error) {
 	if !utf8.ValidString(s) {
-		return nil, errors.New("Invalid UTF-8 string")
+		return 0, errors.New("Invalid UTF-8 string")
 	}
 	if uint64(len(s)) > math.MaxUint32 {
-		return nil, errors.New("String is too large")
+		return 0, errors.New("String is too large")
 	}
 
 	bytes := []byte(s)
@@ -109,7 +110,7 @@ func StringToCFString(s string) (C.CFStringRef, error) {
 	if len(bytes) > 0 {
 		p = (*C.UInt8)(&bytes[0])
 	}
-	return C.CFStringCreateWithBytes(nil, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false), nil
+	return CFStringRefSafe(unsafe.Pointer(C.CFStringCreateWithBytes(nil, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false))), nil
 }
 
 // CFStringToString converts a CFStringRef to a string.
