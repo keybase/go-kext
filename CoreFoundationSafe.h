@@ -21,6 +21,10 @@ CFTypeID CFGetTypeIDSafe(CFTypeRefSafe cf) {
   return CFGetTypeID((CFTypeRef)cf);
 }
 
+CFStringRefSafe CFCopyTypeIDDescriptionSafe(CFTypeID type_id) {
+  return (CFStringRefSafe)CFCopyTypeIDDescription(type_id);
+}
+
 CFArrayRefSafe CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
   return (CFArrayRefSafe)CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }

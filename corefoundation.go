@@ -221,7 +221,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (CFDictionaryRefSafe,
 // CFTypeDescription returns type string for CFTypeRef.
 func CFTypeDescription(ref CFTypeRefSafe) string {
 	typeID := C.CFGetTypeIDSafe(C.CFTypeRefSafe(ref))
-	typeDesc := CFStringRefSafe(unsafe.Pointer(C.CFCopyTypeIDDescription(typeID)))
+	typeDesc := CFStringRefSafe(C.CFCopyTypeIDDescriptionSafe(typeID))
 	defer ReleaseSafe(CFTypeRefSafe(typeDesc))
 	return CFStringToString(typeDesc)
 }
