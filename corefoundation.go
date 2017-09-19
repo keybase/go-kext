@@ -146,11 +146,12 @@ func ArrayToCFArray(a []CFTypeRefSafe) CFArrayRefSafe {
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.
-func CFArrayToArray(cfArray C.CFArrayRef) (a []CFTypeRefSafe) {
-	count := C.CFArrayGetCount(cfArray)
+func CFArrayToArray(cfArray CFArrayRefSafe) (a []CFTypeRefSafe) {
+	cCFArray := C.CFArrayRefSafe(cfArray)
+	count := C.CFArrayGetCountSafe(cCFArray)
 	if count > 0 {
 		ptrs := make([]C.uintptr_t, count)
-		C.CFArrayGetValuesSafe(cfArray, C.CFRange{0, count}, &ptrs[0])
+		C.CFArrayGetValuesSafe(cCFArray, C.CFRange{0, count}, &ptrs[0])
 		a = make([]CFTypeRefSafe, count)
 		for i, ptr := range ptrs {
 			a[i] = CFTypeRefSafe(ptr)
@@ -233,7 +234,7 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 	} else if typeID == C.CFDictionaryGetTypeID() {
 		return ConvertCFDictionary(CFDictionaryRefSafe(ref))
 	} else if typeID == C.CFArrayGetTypeID() {
-		arr := CFArrayToArray(C.CFArrayRef(unsafe.Pointer(ref)))
+		arr := CFArrayToArray(CFArrayRefSafe(ref))
 		results := make([]interface{}, 0, len(arr))
 		for _, ref := range arr {
 			v, err := Convert(CFTypeRefSafe(ref))

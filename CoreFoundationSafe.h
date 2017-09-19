@@ -25,8 +25,12 @@ CFArrayRefSafe CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *valu
   return (CFArrayRefSafe)CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }
 
-void CFArrayGetValuesSafe(CFArrayRef theArray, CFRange range, const uintptr_t *values) {
-  return CFArrayGetValues(theArray, range, (const void **)values);
+void CFArrayGetValuesSafe(CFArrayRefSafe theArray, CFRange range, const uintptr_t *values) {
+  return CFArrayGetValues((CFArrayRef)theArray, range, (const void **)values);
+}
+
+CFIndex CFArrayGetCountSafe(CFArrayRefSafe theArray) {
+  return CFArrayGetCount((CFArrayRef)theArray);
 }
 
 CFDictionaryRefSafe CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
