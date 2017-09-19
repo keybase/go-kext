@@ -9,6 +9,7 @@ package kext
 #include <CoreFoundation/CoreFoundation.h>
 
 typedef uintptr_t CFTypeRefSafe;
+typedef uintptr_t CFStringRefSafe;
 
 void CFReleaseSafe(CFTypeRefSafe cf) {
   CFRelease((CFTypeRef)cf);
@@ -16,6 +17,18 @@ void CFReleaseSafe(CFTypeRefSafe cf) {
 
 CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
   return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
+}
+
+const char * CFStringGetCStringPtrSafe(CFStringRefSafe theString, CFStringEncoding encoding) {
+  return CFStringGetCStringPtr((CFStringRef)theString, encoding);
+}
+
+CFIndex CFStringGetLengthSafe(CFStringRefSafe theString) {
+  return CFStringGetLength((CFStringRef)theString);
+}
+
+CFIndex CFStringGetBytesSafe(CFStringRefSafe theString, CFRange range, CFStringEncoding encoding, UInt8 lossByte, Boolean isExternalRepresentation, UInt8 *buffer, CFIndex maxBufLen, CFIndex *usedBufLen) {
+  return CFStringGetBytes((CFStringRef)theString, range, encoding, lossByte, isExternalRepresentation, buffer, maxBufLen, usedBufLen);
 }
 */
 import "C"
@@ -114,12 +127,12 @@ func StringToCFString(s string) (CFStringRefSafe, error) {
 }
 
 // CFStringToString converts a CFStringRef to a string.
-func CFStringToString(s C.CFStringRef) string {
-	p := C.CFStringGetCStringPtr(s, C.kCFStringEncodingUTF8)
+func CFStringToString(s CFStringRefSafe) string {
+	p := C.CFStringGetCStringPtrSafe(C.CFStringRefSafe(s), C.kCFStringEncodingUTF8)
 	if p != nil {
 		return C.GoString(p)
 	}
-	length := C.CFStringGetLength(s)
+	length := C.CFStringGetLengthSafe(C.CFStringRefSafe(s))
 	if length == 0 {
 		return ""
 	}
@@ -129,7 +142,7 @@ func CFStringToString(s C.CFStringRef) string {
 	}
 	buf := make([]byte, maxBufLen)
 	var usedBufLen C.CFIndex
-	_ = C.CFStringGetBytes(s, C.CFRange{0, length}, C.kCFStringEncodingUTF8, C.UInt8(0), C.false, (*C.UInt8)(&buf[0]), maxBufLen, &usedBufLen)
+	_ = C.CFStringGetBytesSafe(C.CFStringRefSafe(s), C.CFRange{0, length}, C.kCFStringEncodingUTF8, C.UInt8(0), C.false, (*C.UInt8)(&buf[0]), maxBufLen, &usedBufLen)
 	return string(buf[:usedBufLen])
 }
 
@@ -191,7 +204,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			if err != nil {
 				return nil, err
 			}
-			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(stringRef)))
+			defer ReleaseSafe(CFTypeRefSafe(stringRef))
 		case Convertable:
 			convertedRef, err := (i.(Convertable)).Convert()
 			if err != nil {
@@ -216,8 +229,8 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 // CFTypeDescription returns type string for CFTypeRef.
 func CFTypeDescription(ref C.CFTypeRef) string {
 	typeID := C.CFGetTypeID(ref)
-	typeDesc := C.CFCopyTypeIDDescription(typeID)
-	defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(typeDesc)))
+	typeDesc := CFStringRefSafe(unsafe.Pointer(C.CFCopyTypeIDDescription(typeID)))
+	defer ReleaseSafe(CFTypeRefSafe(typeDesc))
 	return CFStringToString(typeDesc)
 }
 
@@ -225,7 +238,7 @@ func CFTypeDescription(ref C.CFTypeRef) string {
 func Convert(ref C.CFTypeRef) (interface{}, error) {
 	typeID := C.CFGetTypeID(ref)
 	if typeID == C.CFStringGetTypeID() {
-		return CFStringToString(C.CFStringRef(ref)), nil
+		return CFStringToString(CFStringRefSafe(ref)), nil
 	} else if typeID == C.CFDictionaryGetTypeID() {
 		return ConvertCFDictionary(C.CFDictionaryRef(ref))
 	} else if typeID == C.CFArrayGetTypeID() {
