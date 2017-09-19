@@ -212,7 +212,7 @@ func CFArrayToArray(cfArray C.CFArrayRef) (a []CFTypeRefSafe) {
 
 // Convertable knows how to convert an instance to a CFTypeRef.
 type Convertable interface {
-	Convert() (C.CFTypeRef, error)
+	Convert() (CFTypeRefSafe, error)
 }
 
 // ConvertMapToCFDictionary converts a map to a CFDictionary and if non-nil,
@@ -237,25 +237,28 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			if err != nil {
 				return nil, err
 			}
-			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(bytesRef)))
+			valueRef = CFTypeRefSafe(unsafe.Pointer(bytesRef))
+			defer ReleaseSafe(valueRef)
 		case string:
 			stringRef, err := StringToCFString(i.(string))
 			if err != nil {
 				return nil, err
 			}
-			defer ReleaseSafe(CFTypeRefSafe(stringRef))
+			valueRef = CFTypeRefSafe(unsafe.Pointer(stringRef))
+			defer ReleaseSafe(valueRef)
 		case Convertable:
 			convertedRef, err := (i.(Convertable)).Convert()
 			if err != nil {
 				return nil, err
 			}
-			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(convertedRef)))
+			valueRef = CFTypeRefSafe(unsafe.Pointer(convertedRef))
+			defer ReleaseSafe(CFTypeRefSafe(valueRef))
 		}
 		keyRef, err := StringToCFString(key)
 		if err != nil {
 			return nil, err
 		}
-		m[CFTypeRefSafe(unsafe.Pointer(keyRef))] = valueRef
+		m[CFTypeRefSafe(keyRef)] = valueRef
 	}
 
 	cfDict, err := MapToCFDictionary(m)
