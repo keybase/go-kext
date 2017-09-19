@@ -46,8 +46,9 @@ func BytesToCFData(b []byte) (CFDataRefSafe, error) {
 }
 
 // CFDataToBytes converts CFData to bytes.
-func CFDataToBytes(cfData C.CFDataRef) ([]byte, error) {
-	return C.GoBytes(unsafe.Pointer(C.CFDataGetBytePtr(cfData)), C.int(C.CFDataGetLength(cfData))), nil
+func CFDataToBytes(cfData CFDataRefSafe) ([]byte, error) {
+	cCFData := C.CFDataRefSafe(cfData)
+	return C.GoBytes(unsafe.Pointer(C.CFDataGetBytePtrSafe(cCFData)), C.int(C.CFDataGetLengthSafe(cCFData))), nil
 }
 
 // MapToCFDictionary will return a CFDictionaryRef and if non-nil, must be
@@ -240,7 +241,7 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 			return results, nil
 		}
 	} else if typeID == C.CFDataGetTypeID() {
-		b, err := CFDataToBytes(C.CFDataRef(unsafe.Pointer(ref)))
+		b, err := CFDataToBytes(CFDataRefSafe(ref))
 		if err != nil {
 			return nil, err
 		}

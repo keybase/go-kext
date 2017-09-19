@@ -61,4 +61,12 @@ CFDataRefSafe CFDataCreateSafe(CFAllocatorRef allocator, const UInt8 *bytes, CFI
   return (CFDataRefSafe)CFDataCreateSafe(allocator, bytes, length);
 }
 
+const UInt8 * CFDataGetBytePtrSafe(CFDataRefSafe theData) {
+  return CFDataGetBytePtr((CFDataRef)theData);
+}
+
+CFIndex CFDataGetLengthSafe(CFDataRefSafe theData) {
+  return CFDataGetLength((CFDataRef)theData);
+}
+
 #endif
