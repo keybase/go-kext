@@ -57,4 +57,8 @@ Boolean CFBooleanGetValueSafe(CFBooleanRefSafe boolean) {
   return CFBooleanGetValue((CFBooleanRef)boolean);
 }
 
+CFDataRefSafe CFDataCreateSafe(CFAllocatorRef allocator, const UInt8 *bytes, CFIndex length) {
+  return (CFDataRefSafe)CFDataCreateSafe(allocator, bytes, length);
+}
+
 #endif

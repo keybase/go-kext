@@ -27,17 +27,17 @@ func ReleaseSafe(ref CFTypeRefSafe) {
 
 // BytesToCFData will return a CFDataRef and if non-nil, must be released with
 // ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(ref))).
-func BytesToCFData(b []byte) (C.CFDataRef, error) {
+func BytesToCFData(b []byte) (C.CFDataRefSafe, error) {
 	if uint64(len(b)) > math.MaxUint32 {
-		return nil, errors.New("Data is too large")
+		return 0, errors.New("Data is too large")
 	}
 	var p *C.UInt8
 	if len(b) > 0 {
 		p = (*C.UInt8)(&b[0])
 	}
-	cfData := C.CFDataCreate(nil, p, C.CFIndex(len(b)))
-	if cfData == nil {
-		return nil, errors.New("CFDataCreate failed")
+	cfData := C.CFDataCreateSafe(nil, p, C.CFIndex(len(b)))
+	if cfData == 0 {
+		return 0, errors.New("CFDataCreate failed")
 	}
 	return cfData, nil
 }
@@ -179,7 +179,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			if err != nil {
 				return nil, err
 			}
-			valueRef = CFTypeRefSafe(unsafe.Pointer(bytesRef))
+			valueRef = CFTypeRefSafe(bytesRef)
 			defer ReleaseSafe(valueRef)
 		case string:
 			stringRef, err := StringToCFString(v)

@@ -9,4 +9,6 @@ typedef uintptr_t CFStringRefSafe;
 typedef uintptr_t CFNumberRefSafe;
 typedef uintptr_t CFBooleanRefSafe;
 
+typedef uintptr_t CFDataRefSafe;
+
 #endif
