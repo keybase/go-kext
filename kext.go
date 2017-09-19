@@ -50,7 +50,7 @@ func LoadInfo(kextID string) (*Info, error) {
 func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != 0 {
-		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer((cfKextID))))
+		defer ReleaseSafe(CFTypeRefSafe(cfKextID))
 	}
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 func Load(kextID string, paths []string) error {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != 0 {
-		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextID)))
+		defer ReleaseSafe(CFTypeRefSafe(cfKextID))
 	}
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func Load(kextID string, paths []string) error {
 	for _, p := range paths {
 		cfPath, err := StringToCFString(p)
 		if cfPath != 0 {
-			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfPath)))
+			defer ReleaseSafe(CFTypeRefSafe(cfPath))
 		}
 		if err != nil {
 			return err
@@ -121,7 +121,7 @@ func Load(kextID string, paths []string) error {
 func Unload(kextID string) error {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != 0 {
-		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextID)))
+		defer ReleaseSafe(CFTypeRefSafe(cfKextID))
 	}
 	if err != nil {
 		return err
