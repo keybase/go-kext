@@ -78,17 +78,17 @@ func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, er
 }
 
 // CFDictionaryToMap converts CFDictionaryRef to a map.
-func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[C.CFTypeRef]uintptr) {
+func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[CFTypeRefSafe]CFTypeRefSafe) {
 	count := C.CFDictionaryGetCount(cfDict)
 	if count > 0 {
-		keys := make([]C.CFTypeRef, count)
-		values := make([]C.CFTypeRef, count)
-		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(&keys[0]), (*unsafe.Pointer)(&values[0]))
-		m = make(map[C.CFTypeRef]uintptr, count)
+		keys := make([]CFTypeRefSafe, count)
+		values := make([]CFTypeRefSafe, count)
+		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(unsafe.Pointer(&keys[0])), (*unsafe.Pointer)(unsafe.Pointer(&values[0])))
+		m = make(map[CFTypeRefSafe]CFTypeRefSafe, count)
 		for i := C.CFIndex(0); i < count; i++ {
 			k := keys[i]
 			v := values[i]
-			m[k] = uintptr(v)
+			m[k] = v
 		}
 	}
 	return
@@ -262,7 +262,7 @@ func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, erro
 	result := make(map[interface{}]interface{})
 
 	for k, v := range m {
-		gk, err := Convert(k)
+		gk, err := Convert(C.CFTypeRef(k))
 		if err != nil {
 			return nil, err
 		}
