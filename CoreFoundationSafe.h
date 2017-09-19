@@ -45,6 +45,10 @@ CFIndex CFDictionaryGetCountSafe(CFDictionaryRefSafe theDict) {
   return CFDictionaryGetCount((CFDictionaryRef)theDict);
 }
 
+CFStringRefSafe CFStringCreateWithBytesSafe(CFAllocatorRef alloc, const UInt8 *bytes, CFIndex numBytes, CFStringEncoding encoding, Boolean isExternalRepresentation) {
+  return (CFStringRefSafe)CFStringCreateWithBytes(alloc, bytes, numBytes, encoding, isExternalRepresentation);
+}
+
 const char * CFStringGetCStringPtrSafe(CFStringRefSafe theString, CFStringEncoding encoding) {
   return CFStringGetCStringPtr((CFStringRef)theString, encoding);
 }

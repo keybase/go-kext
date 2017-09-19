@@ -107,7 +107,7 @@ func StringToCFString(s string) (CFStringRefSafe, error) {
 	if len(bytes) > 0 {
 		p = (*C.UInt8)(&bytes[0])
 	}
-	return CFStringRefSafe(unsafe.Pointer(C.CFStringCreateWithBytes(nil, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false))), nil
+	return CFStringRefSafe(C.CFStringCreateWithBytesSafe(nil, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false)), nil
 }
 
 // CFStringToString converts a CFStringRef to a string.
