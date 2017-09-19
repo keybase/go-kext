@@ -20,14 +20,17 @@ import (
 type CFTypeRefSafe uintptr
 type CFStringRefSafe uintptr
 type CFNumberRefSafe uintptr
+type CFBooleanRefSafe uintptr
+
+type CFDataRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
 	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
 }
 
-// BytesToCFData will return a CFDataRef and if non-nil, must be released with
-// ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(ref))).
-func BytesToCFData(b []byte) (C.CFDataRefSafe, error) {
+// BytesToCFData will return a CFDataRefSafe which, if non-nil, must
+// be released with ReleaseSafe(CFTypeRefSafe(ref)).
+func BytesToCFData(b []byte) (CFDataRefSafe, error) {
 	if uint64(len(b)) > math.MaxUint32 {
 		return 0, errors.New("Data is too large")
 	}
@@ -39,7 +42,7 @@ func BytesToCFData(b []byte) (C.CFDataRefSafe, error) {
 	if cfData == 0 {
 		return 0, errors.New("CFDataCreate failed")
 	}
-	return cfData, nil
+	return CFDataRefSafe(cfData), nil
 }
 
 // CFDataToBytes converts CFData to bytes.
