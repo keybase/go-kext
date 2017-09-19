@@ -31,7 +31,7 @@ func ReleaseSafe(ref CFTypeRefSafe) {
 }
 
 // BytesToCFData will return a CFDataRef and if non-nil, must be released with
-// Release(ref).
+// ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(ref))).
 func BytesToCFData(b []byte) (C.CFDataRef, error) {
 	if uint64(len(b)) > math.MaxUint32 {
 		return nil, errors.New("Data is too large")
