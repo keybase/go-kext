@@ -37,7 +37,7 @@ func BytesToCFData(b []byte) (C.CFDataRef, error) {
 	}
 	cfData := C.CFDataCreate(nil, p, C.CFIndex(len(b)))
 	if cfData == nil {
-		return nil, fmt.Errorf("CFDataCreate failed")
+		return nil, errors.New("CFDataCreate failed")
 	}
 	return cfData, nil
 }
