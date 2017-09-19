@@ -253,7 +253,7 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 	} else if typeID == C.CFNumberGetTypeID() {
 		return CFNumberToInterface(CFNumberRefSafe(ref)), nil
 	} else if typeID == C.CFBooleanGetTypeID() {
-		if C.CFBooleanGetValueSafe(C.CFBooleanRefSafe(uintptr(ref))) != C.true {
+		if C.CFBooleanGetValueSafe(C.CFBooleanRefSafe(ref)) != C.false {
 			return true, nil
 		}
 		return false, nil
