@@ -13,6 +13,10 @@ typedef uintptr_t CFTypeRefSafe;
 void CFReleaseSafe(CFTypeRefSafe cf) {
   CFRelease((CFTypeRef)cf);
 }
+
+CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
+  return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
+}
 */
 import "C"
 import (
@@ -54,19 +58,19 @@ func CFDataToBytes(cfData C.CFDataRef) ([]byte, error) {
 
 // MapToCFDictionary will return a CFDictionaryRef and if non-nil, must be
 // released with Release(ref).
-func MapToCFDictionary(m map[C.CFTypeRef]C.CFTypeRef) (C.CFDictionaryRef, error) {
-	var keys, values []unsafe.Pointer
-	for key, value := range m {
-		keys = append(keys, unsafe.Pointer(key))
-		values = append(values, unsafe.Pointer(value))
-	}
-	numValues := len(values)
-	var keysPointer, valuesPointer *unsafe.Pointer
+func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, error) {
+	numValues := C.CFIndex(len(m))
+	var keysPointer, valuesPointer *C.uintptr_t
 	if numValues > 0 {
+		var keys, values []C.uintptr_t
+		for key, value := range m {
+			keys = append(keys, C.uintptr_t(key))
+			values = append(values, C.uintptr_t(value))
+		}
 		keysPointer = &keys[0]
 		valuesPointer = &values[0]
 	}
-	cfDict := C.CFDictionaryCreate(nil, keysPointer, valuesPointer, C.CFIndex(numValues), &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
+	cfDict := C.CFDictionaryCreateSafe(nil, keysPointer, valuesPointer, numValues, &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
 	if cfDict == nil {
 		return nil, fmt.Errorf("CFDictionaryCreate failed")
 	}
@@ -161,19 +165,19 @@ type Convertable interface {
 // ConvertMapToCFDictionary converts a map to a CFDictionary and if non-nil,
 // must be released with Release(ref).
 func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, error) {
-	m := make(map[C.CFTypeRef]C.CFTypeRef)
+	m := make(map[CFTypeRefSafe]CFTypeRefSafe)
 	for key, i := range attr {
-		var valueRef C.CFTypeRef
-		switch i.(type) {
+		var valueRef CFTypeRefSafe
+		switch v := i.(type) {
 		default:
 			return nil, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
 		case C.CFTypeRef:
-			valueRef = i.(C.CFTypeRef)
+			valueRef = CFTypeRefSafe(v)
 		case bool:
 			if i == true {
-				valueRef = C.CFTypeRef(C.kCFBooleanTrue)
+				valueRef = CFTypeRefSafe(unsafe.Pointer(C.kCFBooleanTrue))
 			} else {
-				valueRef = C.CFTypeRef(C.kCFBooleanFalse)
+				valueRef = CFTypeRefSafe(unsafe.Pointer(C.kCFBooleanFalse))
 			}
 		case []byte:
 			bytesRef, err := BytesToCFData(i.([]byte))
@@ -198,7 +202,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 		if err != nil {
 			return nil, err
 		}
-		m[C.CFTypeRef(keyRef)] = valueRef
+		m[CFTypeRefSafe(unsafe.Pointer(keyRef))] = valueRef
 	}
 
 	cfDict, err := MapToCFDictionary(m)
