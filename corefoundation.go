@@ -60,6 +60,10 @@ CFNumberType CFNumberGetTypeSafe(CFNumberRefSafe number) {
 Boolean CFNumberGetValueSafe(CFNumberRefSafe number, CFNumberType theType, void *valuePtr) {
   return CFNumberGetValue((CFNumberRef)number, theType, valuePtr);
 }
+
+Boolean CFBooleanGetValueSafe(CFBooleanRefSafe boolean) {
+  return CFBooleanGetValue((CFBooleanRef)boolean);
+}
 */
 import "C"
 import (
@@ -296,7 +300,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 	} else if typeID == C.CFNumberGetTypeID() {
 		return CFNumberToInterface(CFNumberRefSafe(ref)), nil
 	} else if typeID == C.CFBooleanGetTypeID() {
-		if C.CFBooleanGetValue(C.CFBooleanRef(ref)) != 0 {
+		if C.CFBooleanGetValueSafe(C.CFBooleanRefSafe(uintptr(ref))) != C.true {
 			return true, nil
 		}
 		return false, nil
