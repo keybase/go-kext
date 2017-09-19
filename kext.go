@@ -42,11 +42,11 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 		return nil, err
 	}
 	cfKextIDs := ArrayToCFArray([]CFTypeRefSafe{CFTypeRefSafe(cfKextID)})
-	if cfKextIDs != nil {
+	if cfKextIDs != 0 {
 		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextIDs)))
 	}
 
-	cfDict := C.KextManagerCopyLoadedKextInfoSafe(cfKextIDs, nil)
+	cfDict := C.KextManagerCopyLoadedKextInfoSafe(C.CFArrayRefSafe(cfKextIDs), 0)
 
 	m, err := ConvertCFDictionary(CFDictionaryRefSafe(cfDict))
 	if err != nil {
@@ -93,11 +93,11 @@ func Load(kextID string, paths []string) error {
 	}
 
 	cfURLs := ArrayToCFArray(urls)
-	if cfURLs != nil {
-		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfURLs)))
+	if cfURLs != 0 {
+		defer ReleaseSafe(CFTypeRefSafe(cfURLs))
 	}
 
-	ret := C.KextManagerLoadKextWithIdentifierSafe(C.CFStringRefSafe(cfKextID), cfURLs)
+	ret := C.KextManagerLoadKextWithIdentifierSafe(C.CFStringRefSafe(cfKextID), C.CFArrayRefSafe(cfURLs))
 	if ret != 0 {
 		return fmt.Errorf("Error loading kext(%d)", ret)
 	}

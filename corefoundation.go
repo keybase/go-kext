@@ -23,6 +23,7 @@ type CFNumberRefSafe uintptr
 type CFBooleanRefSafe uintptr
 
 type CFDataRefSafe uintptr
+type CFArrayRefSafe uintptr
 type CFDictionaryRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
@@ -131,7 +132,7 @@ func CFStringToString(s CFStringRefSafe) string {
 
 // ArrayToCFArray will return a CFArrayRef and if non-nil, must be released with
 // Release(ref).
-func ArrayToCFArray(a []CFTypeRefSafe) C.CFArrayRef {
+func ArrayToCFArray(a []CFTypeRefSafe) CFArrayRefSafe {
 	numValues := C.CFIndex(len(a))
 	var valuesPointer *C.uintptr_t
 	if numValues > 0 {
@@ -141,7 +142,7 @@ func ArrayToCFArray(a []CFTypeRefSafe) C.CFArrayRef {
 		}
 		valuesPointer = &values[0]
 	}
-	return C.CFArrayCreateSafe(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
+	return CFArrayRefSafe(C.CFArrayCreateSafe(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks))
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.

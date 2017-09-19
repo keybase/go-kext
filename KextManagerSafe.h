@@ -9,16 +9,16 @@ CFURLRef CFURLCreateWithFileSystemPathSafe(CFAllocatorRef allocator, CFStringRef
   return CFURLCreateWithFileSystemPath(allocator, (CFStringRef)filePath, pathStyle, isDirectory);
 }
 
-OSReturn KextManagerLoadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier, CFArrayRef dependencyKextAndFolderURLs) {
-  return KextManagerLoadKextWithIdentifier((CFStringRef)kextIdentifier, dependencyKextAndFolderURLs);
+OSReturn KextManagerLoadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier, CFArrayRefSafe dependencyKextAndFolderURLs) {
+  return KextManagerLoadKextWithIdentifier((CFStringRef)kextIdentifier, (CFArrayRef)dependencyKextAndFolderURLs);
 }
 
 OSReturn KextManagerUnloadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier) {
   return KextManagerUnloadKextWithIdentifier((CFStringRef)kextIdentifier);
 }
 
-CFDictionaryRefSafe KextManagerCopyLoadedKextInfoSafe(CFArrayRef kextIdentifiers, CFArrayRef infoKeys) {
-  return (CFDictionaryRefSafe)KextManagerCopyLoadedKextInfo(kextIdentifiers, infoKeys);
+CFDictionaryRefSafe KextManagerCopyLoadedKextInfoSafe(CFArrayRefSafe kextIdentifiers, CFArrayRefSafe infoKeys) {
+  return (CFDictionaryRefSafe)KextManagerCopyLoadedKextInfo((CFArrayRef)kextIdentifiers, (CFArrayRef)infoKeys);
 }
 
 #endif

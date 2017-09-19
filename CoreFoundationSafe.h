@@ -21,8 +21,8 @@ CFTypeID CFGetTypeIDSafe(CFTypeRefSafe cf) {
   return CFGetTypeID((CFTypeRef)cf);
 }
 
-CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
-  return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
+CFArrayRefSafe CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
+  return (CFArrayRefSafe)CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }
 
 void CFArrayGetValuesSafe(CFArrayRef theArray, CFRange range, const uintptr_t *values) {
