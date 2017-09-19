@@ -95,8 +95,8 @@ func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, er
 	return cfDict, nil
 }
 
-// CFDictionaryToMap converts CFDictionaryRef to a map.
-func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[CFTypeRefSafe]CFTypeRefSafe) {
+// cfDictionaryToMap converts CFDictionaryRef to a map.
+func cfDictionaryToMap(cfDict C.CFDictionaryRef) (m map[CFTypeRefSafe]CFTypeRefSafe) {
 	count := C.CFDictionaryGetCount(cfDict)
 	if count > 0 {
 		keys := make([]CFTypeRefSafe, count)
@@ -276,7 +276,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 
 // ConvertCFDictionary converts a CFDictionary to map (deep).
 func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, error) {
-	m := CFDictionaryToMap(C.CFDictionaryRef(d))
+	m := cfDictionaryToMap(C.CFDictionaryRef(d))
 	result := make(map[interface{}]interface{})
 
 	for k, v := range m {
