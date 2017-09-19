@@ -259,7 +259,7 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 		return false, nil
 	}
 
-	return nil, fmt.Errorf("Invalid type: %s", CFTypeDescription(CFTypeRefSafe(ref)))
+	return nil, fmt.Errorf("Invalid type: %s", CFTypeDescription(ref))
 }
 
 // ConvertCFDictionary converts a CFDictionary to map (deep).
