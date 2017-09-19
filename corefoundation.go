@@ -15,6 +15,10 @@ void CFReleaseSafe(CFTypeRefSafe cf) {
   CFRelease((CFTypeRef)cf);
 }
 
+CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
+  return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
+}
+
 CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
   return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
 }
@@ -148,17 +152,17 @@ func CFStringToString(s CFStringRefSafe) string {
 
 // ArrayToCFArray will return a CFArrayRef and if non-nil, must be released with
 // Release(ref).
-func ArrayToCFArray(a []C.CFTypeRef) C.CFArrayRef {
-	var values []unsafe.Pointer
-	for _, value := range a {
-		values = append(values, unsafe.Pointer(value))
-	}
-	numValues := len(values)
-	var valuesPointer *unsafe.Pointer
+func ArrayToCFArray(a []CFTypeRefSafe) C.CFArrayRef {
+	numValues := C.CFIndex(len(a))
+	var valuesPointer *C.uintptr_t
 	if numValues > 0 {
+		var values []C.uintptr_t
+		for _, value := range a {
+			values = append(values, C.uintptr_t(value))
+		}
 		valuesPointer = &values[0]
 	}
-	return C.CFArrayCreate(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
+	return C.CFArrayCreateSafe(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.

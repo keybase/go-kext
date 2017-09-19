@@ -55,7 +55,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfKextIDs := ArrayToCFArray([]C.CFTypeRef{C.CFTypeRef(cfKextID)})
+	cfKextIDs := ArrayToCFArray([]CFTypeRefSafe{CFTypeRefSafe(cfKextID)})
 	if cfKextIDs != nil {
 		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextIDs)))
 	}
@@ -89,7 +89,7 @@ func Load(kextID string, paths []string) error {
 		return err
 	}
 
-	var urls []C.CFTypeRef
+	var urls []CFTypeRefSafe
 	for _, p := range paths {
 		cfPath, err := StringToCFString(p)
 		if cfPath != 0 {
@@ -103,7 +103,7 @@ func Load(kextID string, paths []string) error {
 			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfURL)))
 		}
 
-		urls = append(urls, C.CFTypeRef(cfURL))
+		urls = append(urls, CFTypeRefSafe(unsafe.Pointer(cfURL)))
 	}
 
 	cfURLs := ArrayToCFArray(urls)
