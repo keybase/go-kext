@@ -277,17 +277,17 @@ func CFTypeDescription(ref CFTypeRefSafe) string {
 }
 
 // Convert converts a CFTypeRef to a go instance.
-func Convert(ref C.CFTypeRef) (interface{}, error) {
-	typeID := C.CFGetTypeID(ref)
+func Convert(ref CFTypeRefSafe) (interface{}, error) {
+	typeID := C.CFGetTypeIDSafe(C.CFTypeRefSafe(ref))
 	if typeID == C.CFStringGetTypeID() {
 		return CFStringToString(CFStringRefSafe(ref)), nil
 	} else if typeID == C.CFDictionaryGetTypeID() {
-		return ConvertCFDictionary(C.CFDictionaryRef(ref))
+		return ConvertCFDictionary(C.CFDictionaryRef(unsafe.Pointer(ref)))
 	} else if typeID == C.CFArrayGetTypeID() {
-		arr := CFArrayToArray(C.CFArrayRef(ref))
+		arr := CFArrayToArray(C.CFArrayRef(unsafe.Pointer(ref)))
 		results := make([]interface{}, 0, len(arr))
 		for _, ref := range arr {
-			v, err := Convert(C.CFTypeRef(ref))
+			v, err := Convert(CFTypeRefSafe(ref))
 			if err != nil {
 				return nil, err
 			}
@@ -295,7 +295,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 			return results, nil
 		}
 	} else if typeID == C.CFDataGetTypeID() {
-		b, err := CFDataToBytes(C.CFDataRef(ref))
+		b, err := CFDataToBytes(C.CFDataRef(unsafe.Pointer(ref)))
 		if err != nil {
 			return nil, err
 		}
@@ -318,11 +318,11 @@ func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, erro
 	result := make(map[interface{}]interface{})
 
 	for k, v := range m {
-		gk, err := Convert(C.CFTypeRef(k))
+		gk, err := Convert(k)
 		if err != nil {
 			return nil, err
 		}
-		gv, err := Convert(C.CFTypeRef(v))
+		gv, err := Convert(v)
 		if err != nil {
 			return nil, err
 		}
