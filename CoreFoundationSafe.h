@@ -89,4 +89,8 @@ CFIndex CFDataGetLengthSafe(CFDataRefSafe theData) {
   return CFDataGetLength((CFDataRef)theData);
 }
 
+CFURLRefSafe CFURLCreateWithFileSystemPathSafe(CFAllocatorRef allocator, CFStringRefSafe filePath, CFURLPathStyle pathStyle, Boolean isDirectory) {
+  return (CFURLRefSafe)CFURLCreateWithFileSystemPath(allocator, (CFStringRef)filePath, pathStyle, isDirectory);
+}
+
 #endif

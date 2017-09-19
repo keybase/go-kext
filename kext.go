@@ -10,7 +10,6 @@ package kext
 import "C"
 import (
 	"fmt"
-	"unsafe"
 )
 
 type Info struct {
@@ -84,12 +83,12 @@ func Load(kextID string, paths []string) error {
 		if err != nil {
 			return err
 		}
-		cfURL := C.CFURLCreateWithFileSystemPathSafe(nil, C.CFStringRefSafe(cfPath), 0, 1)
-		if cfURL != nil {
-			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfURL)))
+		cfURL := CFURLCreateWithFileSystemPathSafe(nil, cfPath, 0, 1)
+		if cfURL != 0 {
+			defer ReleaseSafe(CFTypeRefSafe(cfURL))
 		}
 
-		urls = append(urls, CFTypeRefSafe(unsafe.Pointer(cfURL)))
+		urls = append(urls, CFTypeRefSafe(cfURL))
 	}
 
 	cfURLs := ArrayToCFArray(urls)

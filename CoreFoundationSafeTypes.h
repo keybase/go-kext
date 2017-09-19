@@ -12,5 +12,6 @@ typedef uintptr_t CFBooleanRefSafe;
 typedef uintptr_t CFDataRefSafe;
 typedef uintptr_t CFArrayRefSafe;
 typedef uintptr_t CFDictionaryRefSafe;
+typedef uintptr_t CFURLRefSafe;
 
 #endif

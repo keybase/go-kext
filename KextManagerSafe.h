@@ -5,10 +5,6 @@
 
 #include <IOKit/kext/KextManager.h>
 
-CFURLRef CFURLCreateWithFileSystemPathSafe(CFAllocatorRef allocator, CFStringRefSafe filePath, CFURLPathStyle pathStyle, Boolean isDirectory) {
-  return CFURLCreateWithFileSystemPath(allocator, (CFStringRef)filePath, pathStyle, isDirectory);
-}
-
 OSReturn KextManagerLoadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier, CFArrayRefSafe dependencyKextAndFolderURLs) {
   return KextManagerLoadKextWithIdentifier((CFStringRef)kextIdentifier, (CFArrayRef)dependencyKextAndFolderURLs);
 }

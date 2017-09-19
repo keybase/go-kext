@@ -25,6 +25,7 @@ type CFBooleanRefSafe uintptr
 type CFDataRefSafe uintptr
 type CFArrayRefSafe uintptr
 type CFDictionaryRefSafe uintptr
+type CFURLRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
 	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
@@ -353,4 +354,8 @@ func CFNumberToInterface(cfNumber CFNumberRefSafe) interface{} {
 		return int(nsInt)
 	}
 	panic("Unknown CFNumber type")
+}
+
+func CFURLCreateWithFileSystemPathSafe(allocator C.CFAllocatorRef, filePath CFStringRefSafe, pathStyle C.CFURLPathStyle, isDirectory C.Boolean) CFURLRefSafe {
+	return CFURLRefSafe(C.CFURLCreateWithFileSystemPathSafe(allocator, C.CFStringRefSafe(filePath), pathStyle, isDirectory))
 }
