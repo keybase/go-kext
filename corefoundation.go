@@ -63,7 +63,7 @@ func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, er
 	}
 	cfDict := C.CFDictionaryCreateSafe(nil, keysPointer, valuesPointer, numValues, &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
 	if cfDict == nil {
-		return nil, fmt.Errorf("CFDictionaryCreate failed")
+		return nil, errors.New("CFDictionaryCreate failed")
 	}
 	return cfDict, nil
 }
