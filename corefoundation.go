@@ -5,7 +5,14 @@ package kext
 /*
 #cgo LDFLAGS: -framework CoreFoundation
 
+#include <stdint.h>
 #include <CoreFoundation/CoreFoundation.h>
+
+typedef uintptr_t CFTypeRefSafe;
+
+void CFReleaseSafe(CFTypeRefSafe cf) {
+  CFRelease((CFTypeRef)cf);
+}
 */
 import "C"
 import (
@@ -19,6 +26,10 @@ import (
 
 func Release(ref C.CFTypeRef) {
 	C.CFRelease(ref)
+}
+
+func ReleaseSafe(ref C.CFTypeRefSafe) {
+	C.CFReleaseSafe(ref)
 }
 
 // BytesToCFData will return a CFDataRef and if non-nil, must be released with
