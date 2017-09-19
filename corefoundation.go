@@ -111,12 +111,13 @@ func StringToCFString(s string) (CFStringRefSafe, error) {
 }
 
 // CFStringToString converts a CFStringRef to a string.
-func CFStringToString(s CFStringRefSafe) string {
-	p := C.CFStringGetCStringPtrSafe(C.CFStringRefSafe(s), C.kCFStringEncodingUTF8)
+func CFStringToString(cfString CFStringRefSafe) string {
+	cCFString := C.CFStringRefSafe(cfString)
+	p := C.CFStringGetCStringPtrSafe(cCFString, C.kCFStringEncodingUTF8)
 	if p != nil {
 		return C.GoString(p)
 	}
-	length := C.CFStringGetLengthSafe(C.CFStringRefSafe(s))
+	length := C.CFStringGetLengthSafe(cCFString)
 	if length == 0 {
 		return ""
 	}
@@ -126,7 +127,7 @@ func CFStringToString(s CFStringRefSafe) string {
 	}
 	buf := make([]byte, maxBufLen)
 	var usedBufLen C.CFIndex
-	_ = C.CFStringGetBytesSafe(C.CFStringRefSafe(s), C.CFRange{0, length}, C.kCFStringEncodingUTF8, C.UInt8(0), C.false, (*C.UInt8)(&buf[0]), maxBufLen, &usedBufLen)
+	_ = C.CFStringGetBytesSafe(cCFString, C.CFRange{0, length}, C.kCFStringEncodingUTF8, C.UInt8(0), C.false, (*C.UInt8)(&buf[0]), maxBufLen, &usedBufLen)
 	return string(buf[:usedBufLen])
 }
 
