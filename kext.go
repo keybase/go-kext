@@ -8,7 +8,10 @@ package kext
 #include <IOKit/kext/KextManager.h>
 */
 import "C"
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type Info struct {
 	Version string
@@ -33,14 +36,14 @@ func LoadInfo(kextID string) (*Info, error) {
 func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != nil {
-		defer Release(C.CFTypeRef(cfKextID))
+		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer((cfKextID))))
 	}
 	if err != nil {
 		return nil, err
 	}
 	cfKextIDs := ArrayToCFArray([]C.CFTypeRef{C.CFTypeRef(cfKextID)})
 	if cfKextIDs != nil {
-		defer Release(C.CFTypeRef(cfKextIDs))
+		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextIDs)))
 	}
 
 	cfDict := C.KextManagerCopyLoadedKextInfo(cfKextIDs, nil)
@@ -66,7 +69,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 func Load(kextID string, paths []string) error {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != nil {
-		defer Release(C.CFTypeRef(cfKextID))
+		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextID)))
 	}
 	if err != nil {
 		return err
@@ -76,14 +79,14 @@ func Load(kextID string, paths []string) error {
 	for _, p := range paths {
 		cfPath, err := StringToCFString(p)
 		if cfPath != nil {
-			defer Release(C.CFTypeRef(cfPath))
+			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfPath)))
 		}
 		if err != nil {
 			return err
 		}
 		cfURL := C.CFURLCreateWithFileSystemPath(nil, cfPath, 0, 1)
 		if cfURL != nil {
-			defer Release(C.CFTypeRef(cfURL))
+			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfURL)))
 		}
 
 		urls = append(urls, C.CFTypeRef(cfURL))
@@ -91,7 +94,7 @@ func Load(kextID string, paths []string) error {
 
 	cfURLs := ArrayToCFArray(urls)
 	if cfURLs != nil {
-		defer Release(C.CFTypeRef(cfURLs))
+		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfURLs)))
 	}
 
 	ret := C.KextManagerLoadKextWithIdentifier(cfKextID, cfURLs)
@@ -104,7 +107,7 @@ func Load(kextID string, paths []string) error {
 func Unload(kextID string) error {
 	cfKextID, err := StringToCFString(kextID)
 	if cfKextID != nil {
-		defer Release(C.CFTypeRef(cfKextID))
+		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextID)))
 	}
 	if err != nil {
 		return err

@@ -24,12 +24,10 @@ import (
 	"unsafe"
 )
 
-func Release(ref C.CFTypeRef) {
-	C.CFRelease(ref)
-}
+type CFTypeRefSafe uintptr
 
-func ReleaseSafe(ref C.CFTypeRefSafe) {
-	C.CFReleaseSafe(ref)
+func ReleaseSafe(ref CFTypeRefSafe) {
+	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
 }
 
 // BytesToCFData will return a CFDataRef and if non-nil, must be released with
@@ -182,22 +180,19 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			if err != nil {
 				return nil, err
 			}
-			valueRef = C.CFTypeRef(bytesRef)
-			defer Release(valueRef)
+			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(bytesRef)))
 		case string:
 			stringRef, err := StringToCFString(i.(string))
 			if err != nil {
 				return nil, err
 			}
-			valueRef = C.CFTypeRef(stringRef)
-			defer Release(valueRef)
+			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(stringRef)))
 		case Convertable:
 			convertedRef, err := (i.(Convertable)).Convert()
 			if err != nil {
 				return nil, err
 			}
-			valueRef = C.CFTypeRef(convertedRef)
-			defer Release(valueRef)
+			defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(convertedRef)))
 		}
 		keyRef, err := StringToCFString(key)
 		if err != nil {
@@ -217,7 +212,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 func CFTypeDescription(ref C.CFTypeRef) string {
 	typeID := C.CFGetTypeID(ref)
 	typeDesc := C.CFCopyTypeIDDescription(typeID)
-	defer Release(C.CFTypeRef(typeDesc))
+	defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(typeDesc)))
 	return CFStringToString(typeDesc)
 }
 
