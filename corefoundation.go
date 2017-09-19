@@ -244,15 +244,15 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			if err != nil {
 				return nil, err
 			}
-			valueRef = CFTypeRefSafe(unsafe.Pointer(stringRef))
+			valueRef = CFTypeRefSafe(stringRef)
 			defer ReleaseSafe(valueRef)
 		case Convertable:
 			convertedRef, err := (v).Convert()
 			if err != nil {
 				return nil, err
 			}
-			valueRef = CFTypeRefSafe(unsafe.Pointer(convertedRef))
-			defer ReleaseSafe(CFTypeRefSafe(valueRef))
+			valueRef = convertedRef
+			defer ReleaseSafe(valueRef)
 		}
 		keyRef, err := StringToCFString(key)
 		if err != nil {
