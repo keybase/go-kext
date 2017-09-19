@@ -15,6 +15,10 @@ void CFReleaseSafe(CFTypeRefSafe cf) {
   CFRelease((CFTypeRef)cf);
 }
 
+CFTypeID CFGetTypeIDSafe(CFTypeRefSafe cf) {
+  return CFGetTypeID((CFTypeRef)cf);
+}
+
 CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
   return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }
@@ -239,8 +243,8 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 }
 
 // CFTypeDescription returns type string for CFTypeRef.
-func CFTypeDescription(ref C.CFTypeRef) string {
-	typeID := C.CFGetTypeID(ref)
+func CFTypeDescription(ref CFTypeRefSafe) string {
+	typeID := C.CFGetTypeIDSafe(C.CFTypeRefSafe(ref))
 	typeDesc := CFStringRefSafe(unsafe.Pointer(C.CFCopyTypeIDDescription(typeID)))
 	defer ReleaseSafe(CFTypeRefSafe(typeDesc))
 	return CFStringToString(typeDesc)
@@ -279,7 +283,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 		return false, nil
 	}
 
-	return nil, fmt.Errorf("Invalid type: %s", CFTypeDescription(ref))
+	return nil, fmt.Errorf("Invalid type: %s", CFTypeDescription(CFTypeRefSafe(ref)))
 }
 
 // ConvertCFDictionary converts a CFDictionary to map (deep).
