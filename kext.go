@@ -46,9 +46,9 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextIDs)))
 	}
 
-	cfDict := C.KextManagerCopyLoadedKextInfo(cfKextIDs, nil)
+	cfDict := C.KextManagerCopyLoadedKextInfoSafe(cfKextIDs, nil)
 
-	m, err := ConvertCFDictionary(cfDict)
+	m, err := ConvertCFDictionary(CFDictionaryRefSafe(cfDict))
 	if err != nil {
 		return nil, err
 	}

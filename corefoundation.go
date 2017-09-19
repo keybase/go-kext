@@ -74,16 +74,17 @@ func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (CFDictionaryRefSafe, 
 }
 
 // cfDictionaryToMap converts CFDictionaryRef to a map.
-func cfDictionaryToMap(cfDict C.CFDictionaryRef) (m map[CFTypeRefSafe]CFTypeRefSafe) {
-	count := C.CFDictionaryGetCount(cfDict)
+func cfDictionaryToMap(cfDict CFDictionaryRefSafe) (m map[CFTypeRefSafe]CFTypeRefSafe) {
+	cCFDict := C.CFDictionaryRefSafe(cfDict)
+	count := C.CFDictionaryGetCountSafe(cCFDict)
 	if count > 0 {
-		keys := make([]CFTypeRefSafe, count)
-		values := make([]CFTypeRefSafe, count)
-		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(unsafe.Pointer(&keys[0])), (*unsafe.Pointer)(unsafe.Pointer(&values[0])))
+		keys := make([]C.uintptr_t, count)
+		values := make([]C.uintptr_t, count)
+		C.CFDictionaryGetKeysAndValuesSafe(cCFDict, &keys[0], &values[0])
 		m = make(map[CFTypeRefSafe]CFTypeRefSafe, count)
 		for i := C.CFIndex(0); i < count; i++ {
-			k := keys[i]
-			v := values[i]
+			k := CFTypeRefSafe(keys[i])
+			v := CFTypeRefSafe(values[i])
 			m[k] = v
 		}
 	}
@@ -229,7 +230,7 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 	if typeID == C.CFStringGetTypeID() {
 		return CFStringToString(CFStringRefSafe(ref)), nil
 	} else if typeID == C.CFDictionaryGetTypeID() {
-		return ConvertCFDictionary(C.CFDictionaryRef(unsafe.Pointer(ref)))
+		return ConvertCFDictionary(CFDictionaryRefSafe(ref))
 	} else if typeID == C.CFArrayGetTypeID() {
 		arr := CFArrayToArray(C.CFArrayRef(unsafe.Pointer(ref)))
 		results := make([]interface{}, 0, len(arr))
@@ -260,8 +261,8 @@ func Convert(ref CFTypeRefSafe) (interface{}, error) {
 }
 
 // ConvertCFDictionary converts a CFDictionary to map (deep).
-func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, error) {
-	m := cfDictionaryToMap(C.CFDictionaryRef(d))
+func ConvertCFDictionary(d CFDictionaryRefSafe) (map[interface{}]interface{}, error) {
+	m := cfDictionaryToMap(d)
 	result := make(map[interface{}]interface{})
 
 	for k, v := range m {

@@ -17,4 +17,8 @@ OSReturn KextManagerUnloadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier)
   return KextManagerUnloadKextWithIdentifier((CFStringRef)kextIdentifier);
 }
 
+CFDictionaryRefSafe KextManagerCopyLoadedKextInfoSafe(CFArrayRef kextIdentifiers, CFArrayRef infoKeys) {
+  return (CFDictionaryRefSafe)KextManagerCopyLoadedKextInfo(kextIdentifiers, infoKeys);
+}
+
 #endif

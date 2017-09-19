@@ -33,6 +33,14 @@ CFDictionaryRefSafe CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintp
   return (CFDictionaryRefSafe)CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
 }
 
+void CFDictionaryGetKeysAndValuesSafe(CFDictionaryRefSafe theDict, const uintptr_t *keys, const uintptr_t *values) {
+  return CFDictionaryGetKeysAndValues((CFDictionaryRef)theDict, (const void **)keys, (const void **)values);
+}
+
+CFIndex CFDictionaryGetCountSafe(CFDictionaryRefSafe theDict) {
+  return CFDictionaryGetCount((CFDictionaryRef)theDict);
+}
+
 const char * CFStringGetCStringPtrSafe(CFStringRefSafe theString, CFStringEncoding encoding) {
   return CFStringGetCStringPtr((CFStringRef)theString, encoding);
 }
