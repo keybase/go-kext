@@ -43,7 +43,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 	}
 	cfKextIDs := ArrayToCFArray([]CFTypeRefSafe{CFTypeRefSafe(cfKextID)})
 	if cfKextIDs != 0 {
-		defer ReleaseSafe(CFTypeRefSafe(unsafe.Pointer(cfKextIDs)))
+		defer ReleaseSafe(CFTypeRefSafe(cfKextIDs))
 	}
 
 	cfDict := C.KextManagerCopyLoadedKextInfoSafe(C.CFArrayRefSafe(cfKextIDs), 0)
