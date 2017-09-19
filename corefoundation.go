@@ -23,6 +23,7 @@ type CFNumberRefSafe uintptr
 type CFBooleanRefSafe uintptr
 
 type CFDataRefSafe uintptr
+type CFDictionaryRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
 	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
@@ -53,7 +54,7 @@ func CFDataToBytes(cfData CFDataRefSafe) ([]byte, error) {
 
 // MapToCFDictionary will return a CFDictionaryRef and if non-nil, must be
 // released with Release(ref).
-func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, error) {
+func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (CFDictionaryRefSafe, error) {
 	numValues := C.CFIndex(len(m))
 	var keysPointer, valuesPointer *C.uintptr_t
 	if numValues > 0 {
@@ -66,10 +67,10 @@ func MapToCFDictionary(m map[CFTypeRefSafe]CFTypeRefSafe) (C.CFDictionaryRef, er
 		valuesPointer = &values[0]
 	}
 	cfDict := C.CFDictionaryCreateSafe(nil, keysPointer, valuesPointer, numValues, &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
-	if cfDict == nil {
-		return nil, errors.New("CFDictionaryCreate failed")
+	if cfDict == 0 {
+		return 0, errors.New("CFDictionaryCreate failed")
 	}
-	return cfDict, nil
+	return CFDictionaryRefSafe(cfDict), nil
 }
 
 // cfDictionaryToMap converts CFDictionaryRef to a map.
@@ -163,13 +164,13 @@ type Convertable interface {
 
 // ConvertMapToCFDictionary converts a map to a CFDictionary and if non-nil,
 // must be released with Release(ref).
-func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, error) {
+func ConvertMapToCFDictionary(attr map[string]interface{}) (CFDictionaryRefSafe, error) {
 	m := make(map[CFTypeRefSafe]CFTypeRefSafe)
 	for key, i := range attr {
 		var valueRef CFTypeRefSafe
 		switch v := i.(type) {
 		default:
-			return nil, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
+			return 0, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
 		case CFTypeRefSafe:
 			valueRef = v
 		case bool:
@@ -181,35 +182,35 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 		case []byte:
 			bytesRef, err := BytesToCFData(v)
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = CFTypeRefSafe(bytesRef)
 			defer ReleaseSafe(valueRef)
 		case string:
 			stringRef, err := StringToCFString(v)
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = CFTypeRefSafe(stringRef)
 			defer ReleaseSafe(valueRef)
 		case Convertable:
 			convertedRef, err := (v).Convert()
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = convertedRef
 			defer ReleaseSafe(valueRef)
 		}
 		keyRef, err := StringToCFString(key)
 		if err != nil {
-			return nil, err
+			return 0, err
 		}
 		m[CFTypeRefSafe(keyRef)] = valueRef
 	}
 
 	cfDict, err := MapToCFDictionary(m)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	return cfDict, nil
 }

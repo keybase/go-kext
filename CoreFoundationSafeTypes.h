@@ -10,5 +10,6 @@ typedef uintptr_t CFNumberRefSafe;
 typedef uintptr_t CFBooleanRefSafe;
 
 typedef uintptr_t CFDataRefSafe;
+typedef uintptr_t CFDictionaryRefSafe;
 
 #endif
