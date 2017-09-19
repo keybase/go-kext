@@ -19,6 +19,10 @@ CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, 
   return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }
 
+void CFArrayGetValuesSafe(CFArrayRef theArray, CFRange range, const uintptr_t *values) {
+  return CFArrayGetValues(theArray, range, (const void **)values);
+}
+
 CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
   return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
 }
@@ -166,11 +170,15 @@ func ArrayToCFArray(a []CFTypeRefSafe) C.CFArrayRef {
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.
-func CFArrayToArray(cfArray C.CFArrayRef) (a []C.CFTypeRef) {
+func CFArrayToArray(cfArray C.CFArrayRef) (a []CFTypeRefSafe) {
 	count := C.CFArrayGetCount(cfArray)
 	if count > 0 {
-		a = make([]C.CFTypeRef, count)
-		C.CFArrayGetValues(cfArray, C.CFRange{0, count}, (*unsafe.Pointer)(&a[0]))
+		ptrs := make([]C.uintptr_t, count)
+		C.CFArrayGetValuesSafe(cfArray, C.CFRange{0, count}, &ptrs[0])
+		a = make([]CFTypeRefSafe, count)
+		for i, ptr := range ptrs {
+			a[i] = CFTypeRefSafe(ptr)
+		}
 	}
 	return
 }
@@ -249,7 +257,7 @@ func Convert(ref C.CFTypeRef) (interface{}, error) {
 		arr := CFArrayToArray(C.CFArrayRef(ref))
 		results := make([]interface{}, 0, len(arr))
 		for _, ref := range arr {
-			v, err := Convert(ref)
+			v, err := Convert(C.CFTypeRef(ref))
 			if err != nil {
 				return nil, err
 			}
