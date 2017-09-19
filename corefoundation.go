@@ -189,22 +189,21 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (CFDictionaryRefSafe,
 				return 0, err
 			}
 			valueRef = CFTypeRefSafe(bytesRef)
-			defer ReleaseSafe(valueRef)
 		case string:
 			stringRef, err := StringToCFString(v)
 			if err != nil {
 				return 0, err
 			}
 			valueRef = CFTypeRefSafe(stringRef)
-			defer ReleaseSafe(valueRef)
 		case Convertable:
-			convertedRef, err := (v).Convert()
+			convertedRef, err := v.Convert()
 			if err != nil {
 				return 0, err
 			}
 			valueRef = convertedRef
-			defer ReleaseSafe(valueRef)
 		}
+		defer ReleaseSafe(valueRef)
+
 		keyRef, err := StringToCFString(key)
 		if err != nil {
 			return 0, err
