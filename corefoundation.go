@@ -11,6 +11,15 @@ package kext
 typedef uintptr_t CFTypeRefSafe;
 typedef uintptr_t CFStringRefSafe;
 typedef uintptr_t CFNumberRefSafe;
+typedef uintptr_t CFBooleanRefSafe;
+
+CFBooleanRefSafe kCFBooleanFalseSafe(void) {
+  return (CFBooleanRefSafe)kCFBooleanFalse;
+}
+
+CFBooleanRefSafe kCFBooleanTrueSafe(void) {
+  return (CFBooleanRefSafe)kCFBooleanTrue;
+}
 
 void CFReleaseSafe(CFTypeRefSafe cf) {
   CFRelease((CFTypeRef)cf);
@@ -215,9 +224,9 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 			valueRef = CFTypeRefSafe(v)
 		case bool:
 			if i == true {
-				valueRef = CFTypeRefSafe(unsafe.Pointer(C.kCFBooleanTrue))
+				valueRef = CFTypeRefSafe(C.kCFBooleanTrueSafe())
 			} else {
-				valueRef = CFTypeRefSafe(unsafe.Pointer(C.kCFBooleanFalse))
+				valueRef = CFTypeRefSafe(C.kCFBooleanFalseSafe())
 			}
 		case []byte:
 			bytesRef, err := BytesToCFData(i.([]byte))
