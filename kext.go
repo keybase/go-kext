@@ -5,21 +5,7 @@ package kext
 /*
 #cgo LDFLAGS: -framework CoreFoundation -framework IOKit
 
-#include <IOKit/kext/KextManager.h>
-
-typedef uintptr_t CFStringRefSafe;
-
-CFURLRef CFURLCreateWithFileSystemPathSafe(CFAllocatorRef allocator, CFStringRefSafe filePath, CFURLPathStyle pathStyle, Boolean isDirectory) {
-  return CFURLCreateWithFileSystemPath(allocator, (CFStringRef)filePath, pathStyle, isDirectory);
-}
-
-OSReturn KextManagerLoadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier, CFArrayRef dependencyKextAndFolderURLs) {
-  return KextManagerLoadKextWithIdentifier((CFStringRef)kextIdentifier, dependencyKextAndFolderURLs);
-}
-
-OSReturn KextManagerUnloadKextWithIdentifierSafe(CFStringRefSafe kextIdentifier) {
-  return KextManagerUnloadKextWithIdentifier((CFStringRef)kextIdentifier);
-}
+#include "KextManagerSafe.h"
 */
 import "C"
 import (
