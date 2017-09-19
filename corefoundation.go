@@ -28,6 +28,9 @@ type CFDictionaryRefSafe uintptr
 type CFURLRefSafe uintptr
 
 func ReleaseSafe(ref CFTypeRefSafe) {
+	if ref == 0 {
+		panic("ReleaseSafe on nil ref")
+	}
 	C.CFReleaseSafe(C.CFTypeRefSafe(ref))
 }
 
