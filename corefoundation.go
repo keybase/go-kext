@@ -70,7 +70,7 @@ func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[C.CFTypeRef]uintptr) {
 	if count > 0 {
 		keys := make([]C.CFTypeRef, count)
 		values := make([]C.CFTypeRef, count)
-		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(&keys[0]), (*unsafe.Pointer)(&values[0]))
+		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(unsafe.Pointer(&keys[0])), (*unsafe.Pointer)(unsafe.Pointer(&values[0])))
 		m = make(map[C.CFTypeRef]uintptr, count)
 		for i := C.CFIndex(0); i < count; i++ {
 			k := keys[i]
