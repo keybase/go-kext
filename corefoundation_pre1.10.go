@@ -20,6 +20,7 @@ import (
 	"unsafe"
 )
 
+// Release releases memory pointed to by a CFTypeRef.
 func Release(ref C.CFTypeRef) {
 	C.CFRelease(ref)
 }
