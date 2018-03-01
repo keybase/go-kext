@@ -9,10 +9,15 @@ package kext
 #include <CoreFoundation/CoreFoundation.h>
 
 // Can't cast a *uintptr to *unsafe.Pointer in Go, and casting
-// C.CFTypeRef to unsafe.Pointer is unsafe in Go, so do the casting in C
-// (where it's safe).
+// C.CFTypeRef to unsafe.Pointer is unsafe in Go, so have shim functions to
+// do the casting in C (where it's safe).
+
 CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
   return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
+}
+
+CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
+  return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
 }
 */
 import "C"
@@ -128,16 +133,16 @@ func CFStringToString(s C.CFStringRef) string {
 // ArrayToCFArray will return a CFArrayRef and if non-nil, must be released with
 // Release(ref).
 func ArrayToCFArray(a []C.CFTypeRef) C.CFArrayRef {
-	var values []unsafe.Pointer
+	var values []C.uintptr_t
 	for _, value := range a {
-		values = append(values, unsafe.Pointer(value))
+		values = append(values, C.uintptr_t(value))
 	}
 	numValues := len(values)
-	var valuesPointer *unsafe.Pointer
+	var valuesPointer *C.uintptr_t
 	if numValues > 0 {
 		valuesPointer = &values[0]
 	}
-	return C.CFArrayCreate(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
+	return C.CFArrayCreateSafe(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.
