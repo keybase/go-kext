@@ -7,6 +7,13 @@ package kext
 #cgo LDFLAGS: -framework CoreFoundation
 
 #include <CoreFoundation/CoreFoundation.h>
+
+// Can't cast a *uintptr to *unsafe.Pointer in Go, and casting
+// C.CFTypeRef to unsafe.Pointer is unsafe in Go, so do the casting in C
+// (where it's safe).
+CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
+  return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
+}
 */
 import "C"
 import (
@@ -47,18 +54,18 @@ func CFDataToBytes(cfData C.CFDataRef) ([]byte, error) {
 // MapToCFDictionary will return a CFDictionaryRef and if non-nil, must be
 // released with Release(ref).
 func MapToCFDictionary(m map[C.CFTypeRef]C.CFTypeRef) (C.CFDictionaryRef, error) {
-	var keys, values []unsafe.Pointer
+	var keys, values []C.uintptr_t
 	for key, value := range m {
-		keys = append(keys, unsafe.Pointer(key))
-		values = append(values, unsafe.Pointer(value))
+		keys = append(keys, C.uintptr_t(key))
+		values = append(values, C.uintptr_t(value))
 	}
 	numValues := len(values)
-	var keysPointer, valuesPointer *unsafe.Pointer
+	var keysPointer, valuesPointer *C.uintptr_t
 	if numValues > 0 {
 		keysPointer = &keys[0]
 		valuesPointer = &values[0]
 	}
-	cfDict := C.CFDictionaryCreate(nil, keysPointer, valuesPointer, C.CFIndex(numValues), &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
+	cfDict := C.CFDictionaryCreateSafe(nil, keysPointer, valuesPointer, C.CFIndex(numValues), &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
 	if cfDict == 0 {
 		return 0, fmt.Errorf("CFDictionaryCreate failed")
 	}
