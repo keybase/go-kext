@@ -6,6 +6,8 @@ before_install:
   - go get golang.org/x/lint/golint
 
 script:
+  # staticcheck only works for two newest go versions
+  - if [[ "$(go version)" =~ go1.1[12] ]]; then go get honnef.co/go/tools/cmd/staticcheck && staticcheck ./... && echo "staticcheck complete"; fi
   - go vet ./...
   - golint ./...
   - go test ./...
@@ -14,4 +16,5 @@ go:
   - 1.8.x
   - 1.9.x
   - 1.10.x
-  - master
+  - 1.11.x
+  - 1.12.x
