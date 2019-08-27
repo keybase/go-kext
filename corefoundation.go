@@ -1,7 +1,4 @@
 // +build darwin ios
-// +build !go1.10
-
-// TODO: Remove this file once we've completely migrated to go 1.10.x.
 
 package kext
 
@@ -9,6 +6,18 @@ package kext
 #cgo LDFLAGS: -framework CoreFoundation
 
 #include <CoreFoundation/CoreFoundation.h>
+
+// Can't cast a *uintptr to *unsafe.Pointer in Go, and casting
+// C.CFTypeRef to unsafe.Pointer is unsafe in Go, so have shim functions to
+// do the casting in C (where it's safe).
+
+CFDictionaryRef CFDictionaryCreateSafe(CFAllocatorRef allocator, const uintptr_t *keys, const uintptr_t *values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) {
+  return CFDictionaryCreate(allocator, (const void **)keys, (const void **)values, numValues, keyCallBacks, valueCallBacks);
+}
+
+CFArrayRef CFArrayCreateSafe(CFAllocatorRef allocator, const uintptr_t *values, CFIndex numValues, const CFArrayCallBacks *callBacks) {
+  return CFArrayCreate(allocator, (const void **)values, numValues, callBacks);
+}
 */
 import "C"
 import (
@@ -29,15 +38,15 @@ func Release(ref C.CFTypeRef) {
 // Release(ref).
 func BytesToCFData(b []byte) (C.CFDataRef, error) {
 	if uint64(len(b)) > math.MaxUint32 {
-		return nil, errors.New("Data is too large")
+		return 0, errors.New("Data is too large")
 	}
 	var p *C.UInt8
 	if len(b) > 0 {
 		p = (*C.UInt8)(&b[0])
 	}
-	cfData := C.CFDataCreate(nil, p, C.CFIndex(len(b)))
-	if cfData == nil {
-		return nil, fmt.Errorf("CFDataCreate failed")
+	cfData := C.CFDataCreate(C.kCFAllocatorDefault, p, C.CFIndex(len(b)))
+	if cfData == 0 {
+		return 0, fmt.Errorf("CFDataCreate failed")
 	}
 	return cfData, nil
 }
@@ -50,36 +59,34 @@ func CFDataToBytes(cfData C.CFDataRef) ([]byte, error) {
 // MapToCFDictionary will return a CFDictionaryRef and if non-nil, must be
 // released with Release(ref).
 func MapToCFDictionary(m map[C.CFTypeRef]C.CFTypeRef) (C.CFDictionaryRef, error) {
-	var keys, values []unsafe.Pointer
+	var keys, values []C.uintptr_t
 	for key, value := range m {
-		keys = append(keys, unsafe.Pointer(key))
-		values = append(values, unsafe.Pointer(value))
+		keys = append(keys, C.uintptr_t(key))
+		values = append(values, C.uintptr_t(value))
 	}
 	numValues := len(values)
-	var keysPointer, valuesPointer *unsafe.Pointer
+	var keysPointer, valuesPointer *C.uintptr_t
 	if numValues > 0 {
 		keysPointer = &keys[0]
 		valuesPointer = &values[0]
 	}
-	cfDict := C.CFDictionaryCreate(nil, keysPointer, valuesPointer, C.CFIndex(numValues), &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
-	if cfDict == nil {
-		return nil, fmt.Errorf("CFDictionaryCreate failed")
+	cfDict := C.CFDictionaryCreateSafe(C.kCFAllocatorDefault, keysPointer, valuesPointer, C.CFIndex(numValues), &C.kCFTypeDictionaryKeyCallBacks, &C.kCFTypeDictionaryValueCallBacks)
+	if cfDict == 0 {
+		return 0, fmt.Errorf("CFDictionaryCreate failed")
 	}
 	return cfDict, nil
 }
 
 // CFDictionaryToMap converts CFDictionaryRef to a map.
-func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[C.CFTypeRef]uintptr) {
+func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[C.CFTypeRef]C.CFTypeRef) {
 	count := C.CFDictionaryGetCount(cfDict)
 	if count > 0 {
 		keys := make([]C.CFTypeRef, count)
 		values := make([]C.CFTypeRef, count)
-		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(&keys[0]), (*unsafe.Pointer)(&values[0]))
-		m = make(map[C.CFTypeRef]uintptr, count)
+		C.CFDictionaryGetKeysAndValues(cfDict, (*unsafe.Pointer)(unsafe.Pointer(&keys[0])), (*unsafe.Pointer)(unsafe.Pointer(&values[0])))
+		m = make(map[C.CFTypeRef]C.CFTypeRef, count)
 		for i := C.CFIndex(0); i < count; i++ {
-			k := keys[i]
-			v := values[i]
-			m[k] = uintptr(v)
+			m[keys[i]] = values[i]
 		}
 	}
 	return
@@ -89,10 +96,10 @@ func CFDictionaryToMap(cfDict C.CFDictionaryRef) (m map[C.CFTypeRef]uintptr) {
 // Release(ref).
 func StringToCFString(s string) (C.CFStringRef, error) {
 	if !utf8.ValidString(s) {
-		return nil, errors.New("Invalid UTF-8 string")
+		return 0, errors.New("Invalid UTF-8 string")
 	}
 	if uint64(len(s)) > math.MaxUint32 {
-		return nil, errors.New("String is too large")
+		return 0, errors.New("String is too large")
 	}
 
 	bytes := []byte(s)
@@ -100,7 +107,7 @@ func StringToCFString(s string) (C.CFStringRef, error) {
 	if len(bytes) > 0 {
 		p = (*C.UInt8)(&bytes[0])
 	}
-	return C.CFStringCreateWithBytes(nil, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false), nil
+	return C.CFStringCreateWithBytes(C.kCFAllocatorDefault, p, C.CFIndex(len(s)), C.kCFStringEncodingUTF8, C.false), nil
 }
 
 // CFStringToString converts a CFStringRef to a string.
@@ -126,16 +133,16 @@ func CFStringToString(s C.CFStringRef) string {
 // ArrayToCFArray will return a CFArrayRef and if non-nil, must be released with
 // Release(ref).
 func ArrayToCFArray(a []C.CFTypeRef) C.CFArrayRef {
-	var values []unsafe.Pointer
+	var values []C.uintptr_t
 	for _, value := range a {
-		values = append(values, unsafe.Pointer(value))
+		values = append(values, C.uintptr_t(value))
 	}
 	numValues := len(values)
-	var valuesPointer *unsafe.Pointer
+	var valuesPointer *C.uintptr_t
 	if numValues > 0 {
 		valuesPointer = &values[0]
 	}
-	return C.CFArrayCreate(nil, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
+	return C.CFArrayCreateSafe(C.kCFAllocatorDefault, valuesPointer, C.CFIndex(numValues), &C.kCFTypeArrayCallBacks)
 }
 
 // CFArrayToArray converts a CFArrayRef to an array of CFTypes.
@@ -143,7 +150,7 @@ func CFArrayToArray(cfArray C.CFArrayRef) (a []C.CFTypeRef) {
 	count := C.CFArrayGetCount(cfArray)
 	if count > 0 {
 		a = make([]C.CFTypeRef, count)
-		C.CFArrayGetValues(cfArray, C.CFRange{0, count}, (*unsafe.Pointer)(&a[0]))
+		C.CFArrayGetValues(cfArray, C.CFRange{0, count}, (*unsafe.Pointer)(unsafe.Pointer(&a[0])))
 	}
 	return
 }
@@ -161,7 +168,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 		var valueRef C.CFTypeRef
 		switch val := i.(type) {
 		default:
-			return nil, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
+			return 0, fmt.Errorf("Unsupported value type: %v", reflect.TypeOf(i))
 		case C.CFTypeRef:
 			valueRef = val
 		case bool:
@@ -173,28 +180,28 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 		case []byte:
 			bytesRef, err := BytesToCFData(val)
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = C.CFTypeRef(bytesRef)
 			defer Release(valueRef)
 		case string:
 			stringRef, err := StringToCFString(val)
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = C.CFTypeRef(stringRef)
 			defer Release(valueRef)
 		case Convertable:
 			convertedRef, err := val.Convert()
 			if err != nil {
-				return nil, err
+				return 0, err
 			}
 			valueRef = C.CFTypeRef(convertedRef)
 			defer Release(valueRef)
 		}
 		keyRef, err := StringToCFString(key)
 		if err != nil {
-			return nil, err
+			return 0, err
 		}
 		m[C.CFTypeRef(keyRef)] = valueRef
 		defer Release(C.CFTypeRef(keyRef))
@@ -202,7 +209,7 @@ func ConvertMapToCFDictionary(attr map[string]interface{}) (C.CFDictionaryRef, e
 
 	cfDict, err := MapToCFDictionary(m)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	return cfDict, nil
 }
@@ -261,7 +268,7 @@ func ConvertCFDictionary(d C.CFDictionaryRef) (map[interface{}]interface{}, erro
 		if err != nil {
 			return nil, err
 		}
-		gv, err := Convert(C.CFTypeRef(v))
+		gv, err := Convert(v)
 		if err != nil {
 			return nil, err
 		}
