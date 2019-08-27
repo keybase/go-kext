@@ -43,7 +43,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 		defer Release(C.CFTypeRef(cfKextIDs))
 	}
 
-	cfDict := C.KextManagerCopyLoadedKextInfo(C.CFArrayRef(cfKextIDs), 0)
+	cfDict := C.KextManagerCopyLoadedKextInfo(cfKextIDs, 0)
 
 	m, err := ConvertCFDictionary(cfDict)
 	if err != nil {
@@ -81,12 +81,12 @@ func Load(kextID string, paths []string) error {
 		if err != nil {
 			return err
 		}
-		cfURL := C.CFURLCreateWithFileSystemPath(C.kCFAllocatorDefault, C.CFStringRef(cfPath), 0, 1)
+		cfURL := C.CFURLCreateWithFileSystemPath(C.kCFAllocatorDefault, cfPath, 0, 1)
 		if cfURL != 0 {
-			defer Release(C.CFTypeRef(C.CFURLRef(cfURL)))
+			defer Release(C.CFTypeRef(cfURL))
 		}
 
-		urls = append(urls, C.CFTypeRef(C.CFURLRef(cfURL)))
+		urls = append(urls, C.CFTypeRef(cfURL))
 	}
 
 	cfURLs := ArrayToCFArray(urls)
