@@ -3,12 +3,12 @@
 package kext
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestInfoRaw(t *testing.T) {
-	for i := 0; i < 10000; i ++ {
+	for i := 0; i < 10000; i++ {
 		fmt.Printf("%d....\n", i)
 		info, err := LoadInfoRaw("com.github.kbfuse.filesystems.kbfuse")
 		if err != nil {
