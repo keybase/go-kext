@@ -1,5 +1,5 @@
 # Go Kext
 
-[![Travis CI](https://travis-ci.org/keybase/go-kext.svg?branch=master)](https://travis-ci.org/keybase/go-kext)
+[![Build Status](https://github.com/keybase/go-kext/actions/workflows/ci.yml/badge.svg)](https://github.com/keybase/go-kext/actions)
 
 A library for loading, unloading and viewing info for kernel extensions on OS X (golang).
