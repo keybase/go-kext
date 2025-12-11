@@ -56,7 +56,7 @@ func LoadInfoRaw(kextID string) (map[interface{}]interface{}, error) {
 		return nil, nil
 	}
 
-	var ret, cast = info.(map[interface{}]interface{})
+	ret, cast := info.(map[interface{}]interface{})
 	if !cast {
 		return nil, fmt.Errorf("Unexpected value for kext info")
 	}
