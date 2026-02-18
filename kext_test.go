@@ -1,5 +1,4 @@
 //go:build darwin && !ios
-// +build darwin,!ios
 
 package kext
 
@@ -9,7 +8,7 @@ import (
 )
 
 func TestInfoRaw(t *testing.T) {
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		fmt.Printf("%d....\n", i)
 		info, err := LoadInfoRaw("com.github.kbfuse.filesystems.kbfuse")
 		if err != nil {
